@@ -115,7 +115,7 @@
 
 <header>
   <h1>立刷门店认证校验结算卡状态 · 交互原型</h1>
-  <p>V0.3 ｜ 2026/09/14</p>
+  <p>V0.4 ｜ 2026/09/14</p>
 </header>
 
 <div class="tabs">
@@ -149,7 +149,8 @@
           <tr><td><span class="st s2">审核未通过</span></td><td>正常保存</td><td>不发起</td><td>银行审核未通过，请重新提交银行卡信息</td><td>跳<b>实名认证页</b>，复用现有报错条 + 重传交互</td></tr>
         </table>
         <div class="warn">⚠️ 商户端<b>没有「待确认结算卡」这个状态分支</b>：非首次入网的「入网信息确认」是门店认证的前置步骤，未确认结算卡就进不了门店认证页，服务端保留判定仅作兜底。该状态只在开放平台接口侧是正式返回码，见功能3。</div>
-        <p style="margin:10px 0 0;font-size:12.5px;color:var(--sub)">怎么点：上方状态选「审核未通过」→ 点【提交】→ 弹窗【去重新提交】→ 在实名认证页点结算卡照片重传 → 选「审核通过」，可看到系统自动补发报备。</p>
+        <p style="margin:10px 0 0;font-size:12.5px;color:var(--sub)">怎么点：上方状态选「审核未通过」→ 点【提交】→ 弹窗点【确认】→ 进入实名认证页，点结算卡照片或【确认继续】模拟重传（状态变为审核中，回到门店认证页）→ 上方状态切到「已完成」模拟审核通过，已提交过门店认证的由系统自动补发报备，进入结果页。</p>
+        <p style="margin:6px 0 0;font-size:12.5px;color:var(--sub)">说明：门店认证页字段与布局不改，结算卡号为现有反显、不可修改；实名认证页为现有页面，顶部报错条与重传交互直接复用；结果页沿用现有成功／失败／认证中结果页，原型仅示意。</p>
       </div>
     </div>
   </div>
@@ -180,7 +181,8 @@
           <tr><td>提示形态</td><td>APP 内弹窗／Toast，不跳公众号 H5</td></tr>
           <tr><td>可复用的现有交互</td><td>人工审核弹窗「结算卡照片多次识别未通过，确认是否提交人工审核」与 H5 一致；三要素失败 Toast 为「身份信息认证未通过，请核对姓名、身份证号、结算卡号」</td></tr>
         </table>
-        <div class="warn">⚠️ 门店认证页底部按钮文案<b>待确认</b>（实际截图中被裁切，此处按 APP 其它页样式暂用【下一步】）。</div>
+        <p style="margin:10px 0 0;font-size:12.5px;color:var(--sub)">怎么点：上方状态选「审核未通过」→ 点【下一步】→ 弹窗点【确认】→ 进入「注册－上传结算卡」页，点结算卡照片或【下一步】模拟合伙人代传（状态变为审核中，回到门店认证页）→ 上方状态切到「已完成」模拟审核通过，系统自动补发报备，进入结果页。</p>
+        <p style="margin:6px 0 0;font-size:12.5px;color:var(--sub)">说明：「注册－上传结算卡」页为现有页面，合伙人在此代商户上传结算卡照片，本次不改；结果页沿用现有结果页，原型仅示意。</p>
       </div>
     </div>
   </div>
@@ -263,9 +265,15 @@ function renderStateBar(app){
 }
 
 function setState(app, v){
+  var prev = S[app].bcs;
   S[app].bcs = v;
   renderStateBar(app);
-  if (app !== 'api') render(app);
+  if (app === 'api') return;
+  if (v === '3' && prev !== '3' && S[app].shopSubmitted && cur(app) !== 'result') {
+    S[app].autoReported = true;
+    S[app].stack = [START[app], 'result'];
+  }
+  render(app);
 }
 
 function cur(app){ return S[app].stack[S[app].stack.length - 1]; }
@@ -284,7 +292,7 @@ function shopFields(withSettle, firstLabel){
     '</div></div>';
   if (withSettle){
     h += '<div class="grp"><h4>结算信息</h4><div class="list">' +
-      '<div class="row"><b>结算卡</b><span class="v">6214 **** **** 5446（反显不可改）</span></div>' +
+      '<div class="row"><b>结算卡</b><span class="v">6214 **** **** 5446</span></div>' +
       '<div class="row"><b>结算卡开户行</b><span class="v">招商银行深圳爱华支行</span></div>' +
       '</div></div>';
   }
@@ -294,15 +302,9 @@ function shopFields(withSettle, firstLabel){
   return h;
 }
 function resultScreen(app){
-  var auto = S[app].autoReported;
   return '<div style="padding:70px 24px;text-align:center">' +
     '<div style="font-size:44px;color:var(--green);line-height:1">✓</div>' +
-    '<div style="margin-top:12px;font-size:16px;font-weight:600">门店认证已提交</div>' +
-    '<div style="margin-top:8px;font-size:13px;color:var(--sub);line-height:1.8">' +
-      (auto ? '结算卡审核通过<br><b style="color:var(--markline)">系统已自动补发银联渠道报备</b><br>商户无需重新提交门店认证'
-            : '已发起银联渠道报备<br>按现有逻辑返回成功／失败／认证中') +
-    '</div></div>' +
-    '<div class="btnbar"><button class="btn" onclick="reset(\'' + app + '\')">重新演示</button></div>';
+    '<div style="margin-top:12px;font-size:16px;font-weight:600">门店认证已提交</div></div>';
 }
 
 /* ---------- 各端页面 ---------- */
@@ -311,7 +313,6 @@ var H5 = {
     title:'门店认证', sub:'epass.jlpay.com',
     body:function(){
       return shopFields(true, '门店地区') +
-        '<div class="hint">页面字段与布局本次不改，改动只发生在点【提交】之后。</div>' +
         '<div class="btnbar"><button class="btn" onclick="submitShop(\'h5\')">提交</button></div>';
     }
   },
@@ -331,7 +332,6 @@ var H5 = {
         '<div class="row"><b>入网地区</b><span class="v">广东省深圳市南山区</span></div>' +
         '<div class="row"><b>详细地址</b><span class="v">粤海街道高新南四道17号</span></div>' +
         '</div></div>' +
-        '<div class="hint">本页为现有页面，报错条与重传交互直接复用，本次不改。</div>' +
         '<div class="btnbar"><button class="btn" onclick="reupload(\'h5\')">确认继续</button></div>';
     }
   },
@@ -343,7 +343,6 @@ var APP = {
     title:'门店认证',
     body:function(){
       return shopFields(false, '入网地区') +
-        '<div class="hint">合伙人 APP 门店认证页没有「结算信息」分组，结算卡在上一步的「注册-上传结算卡」页录入。</div>' +
         '<div class="btnbar"><button class="btn" onclick="submitShop(\'app\')">下一步</button></div>';
     }
   },
@@ -363,7 +362,6 @@ var APP = {
         '<div class="row"><b>入网地区</b><span class="v">广东省深圳市南山区</span></div>' +
         '<div class="row"><b>详细地址</b><span class="v">粤海街道高新区社区万德莱大厦北座</span></div>' +
         '</div></div>' +
-        '<div class="hint">本页为现有页面，合伙人在此代商户上传结算卡照片，本次不改。</div>' +
         '<div class="btnbar"><button class="btn" onclick="reupload(\'app\')">下一步</button>' +
         '<div class="agree">✓ 我已阅读并同意《立刷电签版服务协议》和《隐私权政策》</div></div>';
     }
@@ -430,41 +428,16 @@ function submitShop(app){
   if (v === '3'){ S[app].autoReported = false; go(app, 'result'); return; }
   if (v === '1'){ toast(app, '银行卡审核中，请稍后刷新查看'); return; }
   /* v === '2' */
-  dialog(app, '银行审核未通过，请重新提交银行卡信息', '去重新提交', function(){
+  dialog(app, '银行审核未通过，请重新提交银行卡信息', '确认', function(){
     go(app, app === 'h5' ? 'realname' : 'card');
   });
 }
 
-/* 重传结算卡 → 模拟审核结果 */
+/* 重传结算卡：状态变为审核中，回到门店认证页（审核结果用上方状态条模拟） */
 function reupload(app){
   clearLayer(app);
-  var m = document.createElement('div');
-  m.className = 'mask';
-  m.innerHTML = '<div class="dlg"><p>结算卡已重新提交。<br>模拟审核结果：</p><div class="acts">' +
-    '<button data-k="cancel">取消</button>' +
-    '<button data-k="pass">审核通过</button>' +
-    '<button data-k="fail" style="color:var(--red)">审核不通过</button>' +
-    '</div></div>';
-  m.querySelector('[data-k=cancel]').onclick = function(){ m.remove(); };
-  m.querySelector('[data-k=pass]').onclick = function(){
-    m.remove();
-    S[app].bcs = '3'; renderStateBar(app);
-    if (S[app].shopSubmitted){
-      S[app].autoReported = true;
-      S[app].stack = [START[app], 'result'];
-      render(app);
-      toast(app, '结算卡审核通过，系统已自动补发银联报备');
-    } else {
-      close_(app);
-      toast(app, '结算卡审核通过');
-    }
-  };
-  m.querySelector('[data-k=fail]').onclick = function(){
-    m.remove();
-    S[app].bcs = '2'; renderStateBar(app); render(app);
-    toast(app, '结算卡审核未通过，仍不发起报备');
-  };
-  document.getElementById('sc-' + app).appendChild(m);
+  S[app].bcs = '1'; renderStateBar(app);
+  back(app);
 }
 
 /* ---------- 功能3：接口模拟 ---------- */
