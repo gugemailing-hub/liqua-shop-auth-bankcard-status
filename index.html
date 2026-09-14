@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>立刷门店认证校验结算卡状态 · 原型</title>
+<style>
+  :root{
+    --bg:#f2f3f5; --line:#e5e6eb; --text:#1d2129; --sub:#86909c;
+    --blue:#1677ff; --red:#f53f3f; --orange:#ff7d00; --green:#00b42a;
+    --mark:#fff3e8; --markline:#ff7d00;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font:14px/1.6 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}
+  header{background:#fff;border-bottom:1px solid var(--line);padding:16px 24px}
+  header h1{margin:0 0 4px;font-size:18px}
+  header p{margin:0;color:var(--sub);font-size:13px}
+  .tabs{display:flex;gap:8px;padding:12px 24px 0;flex-wrap:wrap}
+  .tab{padding:7px 16px;border:1px solid var(--line);background:#fff;border-radius:6px;
+    cursor:pointer;font-size:13px;color:var(--sub)}
+  .tab.on{background:var(--blue);border-color:var(--blue);color:#fff}
+
+  /* 状态选择器：tab 正下方、左上角 */
+  .statebar{margin:14px 24px 0;background:#fff;border:1px solid var(--line);
+    border-radius:10px;padding:11px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .statebar .lbl{font-size:13px;font-weight:600;margin-right:2px}
+  .seg{border:1px solid var(--line);background:#fff;color:#4e5969;border-radius:16px;
+    padding:5px 14px;font-size:13px;cursor:pointer}
+  .seg:hover{border-color:var(--blue)}
+  .seg.on{color:#fff;border-color:transparent;font-weight:600}
+  .seg.on.v3{background:var(--green)} .seg.on.v1{background:var(--orange)}
+  .seg.on.v2{background:var(--red)}   .seg.on.v0{background:var(--sub)}
+  .statebar .now{font-size:12.5px;color:var(--sub);margin-left:4px}
+  .statebar .now b{color:var(--text)}
+
+  .wrap{display:flex;gap:20px;padding:14px 24px 48px;align-items:flex-start;flex-wrap:wrap}
+  .stage{flex:0 0 auto;width:340px}
+  .panel{flex:1;min-width:420px}
+  .hide{display:none}
+
+  .phone{position:relative;width:340px;background:#fff;border:1px solid var(--line);border-radius:20px;
+    overflow:hidden;box-shadow:0 6px 24px rgba(0,0,0,.08)}
+  .nav{height:46px;display:flex;align-items:center;justify-content:center;position:relative;
+    border-bottom:1px solid var(--line);font-weight:600;font-size:15px;background:#fff}
+  .nav .lbtns{position:absolute;left:12px;display:flex;gap:12px}
+  .nav .lbtns b{font-weight:400;color:#4e5969;cursor:pointer;font-size:17px;line-height:1;
+    padding:3px 6px;border-radius:4px}
+  .nav .lbtns b:hover{background:#f2f3f5}
+  .nav .lbtns b.off{color:#c9cdd4;cursor:not-allowed}
+  .nav .lbtns b.off:hover{background:none}
+  .nav small{position:absolute;top:27px;left:0;right:0;text-align:center;
+    color:var(--sub);font-weight:400;font-size:10px}
+  .screen{height:560px;overflow-y:auto;background:var(--bg);padding-bottom:88px}
+
+  .grp{margin:10px 0 0}
+  .grp h4{margin:0;padding:10px 14px 6px;font-size:13px;font-weight:600;
+    display:flex;align-items:center;gap:6px}
+  .grp h4::before{content:"";width:3px;height:13px;background:var(--blue);border-radius:2px}
+  .list{background:#fff}
+  .row{display:flex;justify-content:space-between;gap:10px;padding:12px 14px;
+    border-bottom:1px solid #f2f3f5;font-size:13px;align-items:center}
+  .row:last-child{border-bottom:0}
+  .row b{font-weight:400;white-space:nowrap}
+  .row span{color:var(--sub);text-align:right}
+  .row .v{color:var(--text)}
+  .btnbar{position:absolute;bottom:0;left:0;right:0;padding:10px 14px;background:#fff;border-top:1px solid var(--line)}
+  .btn{width:100%;border:0;background:var(--blue);color:#fff;border-radius:22px;
+    padding:11px 0;font-size:15px;cursor:pointer}
+  .btn:active{opacity:.85}
+  .agree{font-size:11px;color:var(--sub);text-align:center;margin-top:7px}
+
+  .errbar{background:#ffece8;color:var(--red);padding:9px 14px;font-size:12.5px}
+  .infobar{background:#e8f3ff;color:var(--blue);padding:8px 14px;font-size:11.5px}
+  .toast{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);
+    background:rgba(0,0,0,.8);color:#fff;padding:12px 18px;border-radius:8px;
+    font-size:13px;max-width:255px;text-align:center;z-index:9;line-height:1.5}
+  .mask{position:absolute;inset:0;background:rgba(0,0,0,.45);display:flex;
+    align-items:center;justify-content:center;z-index:9}
+  .dlg{width:264px;background:#fff;border-radius:12px;overflow:hidden}
+  .dlg p{margin:0;padding:22px 18px;font-size:14.5px;line-height:1.55}
+  .dlg .acts{display:flex;border-top:1px solid var(--line)}
+  .dlg .acts button{flex:1;border:0;background:#fff;padding:12px 0;font-size:14px;cursor:pointer}
+  .dlg .acts button+button{border-left:1px solid var(--line);color:var(--blue)}
+  .hint{padding:9px 14px;color:var(--sub);font-size:11.5px;background:#fff;line-height:1.6}
+  .ph{width:66px;height:42px;border:1px dashed #c9cdd4;border-radius:4px;
+    display:flex;align-items:center;justify-content:center;color:#a9aeb8;font-size:10px;flex:0 0 auto}
+  .cardpic{margin:12px 14px 6px;width:136px;height:88px;border:1px dashed #c9cdd4;border-radius:6px;
+    background:#f7f8fa;display:flex;align-items:center;justify-content:center;
+    color:#86909c;font-size:11px;text-align:center;cursor:pointer;line-height:1.5}
+  .cardpic:hover{border-color:var(--blue);color:var(--blue)}
+
+  .bar{margin-top:12px;display:flex;gap:8px}
+  .bar button{flex:1;border:1px solid var(--line);background:#fff;border-radius:6px;
+    padding:7px 0;font-size:12.5px;cursor:pointer}
+  .bar button:hover{border-color:var(--blue);color:var(--blue)}
+
+  .card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin-bottom:16px}
+  .card h3{margin:0 0 4px;font-size:15px}
+  .card .path{color:var(--sub);font-size:12.5px;margin:0 0 12px;
+    background:#f7f8fa;border-radius:5px;padding:6px 9px;word-break:break-all}
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th,td{border:1px solid var(--line);padding:7px 9px;text-align:left;vertical-align:top}
+  th{background:#f7f8fa;font-weight:600;white-space:nowrap}
+  .st{display:inline-block;border-radius:3px;padding:0 6px;font-size:11.5px;color:#fff;white-space:nowrap}
+  .s0{background:#86909c}.s1{background:var(--orange)}.s2{background:var(--red)}.s3{background:var(--green)}
+  .warn{background:#fff7e8;border-left:3px solid var(--orange);padding:9px 12px;
+    font-size:12.5px;margin-top:10px;border-radius:0 5px 5px 0}
+  code{background:#f2f3f5;border-radius:3px;padding:1px 5px;font-size:12px}
+  pre{background:#1d2129;color:#e5e6eb;border-radius:8px;padding:12px 14px;
+    font-size:12px;line-height:1.7;overflow-x:auto;margin:0}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>立刷门店认证校验结算卡状态 · 交互原型</h1>
+  <p>V0.3 ｜ 2026/09/14</p>
+</header>
+
+<div class="tabs">
+  <div class="tab on" data-t="h5">功能1 · 立刷公众号 H5</div>
+  <div class="tab" data-t="app">功能2 · 合伙人 APP</div>
+  <div class="tab" data-t="api">功能3 · 开放平台接口</div>
+</div>
+
+<!-- ============ 功能1 ============ -->
+<div id="v-h5">
+  <div class="statebar" id="sb-h5"></div>
+  <div class="wrap">
+    <div class="stage">
+      <div class="phone">
+        <div class="nav" id="nav-h5"></div>
+        <div class="screen" id="sc-h5"></div>
+      </div>
+      <div class="bar">
+        <button onclick="reset('h5')">重置流程</button>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="card">
+        <h3>功能1：立刷公众号 H5 · 门店认证提交校验</h3>
+        <p class="path">页面路径：立刷电签版公众号 → 首页 → 待办事项「您还未完成门店认证」→ <b>门店认证</b>（原型从门店认证页起）</p>
+        <p style="margin:0 0 10px;font-size:13px">页面字段与布局<b>不改</b>，只在点击【提交】后、<b>发起银联渠道报备前</b>增加结算卡认证状态校验。</p>
+        <table>
+          <tr><th>状态</th><th>门店认证资料</th><th>是否报备</th><th>对外提示</th><th>后续走向</th></tr>
+          <tr><td><span class="st s3">已完成</span></td><td>正常保存</td><td>正常发起</td><td>无</td><td>现有结果页（成功／失败／认证中）</td></tr>
+          <tr><td><span class="st s1">审核中</span></td><td>正常保存</td><td>不发起</td><td>银行卡审核中，请稍后刷新查看</td><td>停留门店认证页；卡审核通过后<b>系统自动补发报备</b></td></tr>
+          <tr><td><span class="st s2">审核未通过</span></td><td>正常保存</td><td>不发起</td><td>银行审核未通过，请重新提交银行卡信息</td><td>跳<b>实名认证页</b>，复用现有报错条 + 重传交互</td></tr>
+        </table>
+        <div class="warn">⚠️ 商户端<b>没有「待确认结算卡」这个状态分支</b>：非首次入网的「入网信息确认」是门店认证的前置步骤，未确认结算卡就进不了门店认证页，服务端保留判定仅作兜底。该状态只在开放平台接口侧是正式返回码，见功能3。</div>
+        <p style="margin:10px 0 0;font-size:12.5px;color:var(--sub)">怎么点：上方状态选「审核未通过」→ 点【提交】→ 弹窗【去重新提交】→ 在实名认证页点结算卡照片重传 → 选「审核通过」，可看到系统自动补发报备。</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 功能2 ============ -->
+<div id="v-app" class="hide">
+  <div class="statebar" id="sb-app"></div>
+  <div class="wrap">
+    <div class="stage">
+      <div class="phone">
+        <div class="nav" id="nav-app"></div>
+        <div class="screen" id="sc-app"></div>
+      </div>
+      <div class="bar">
+        <button onclick="reset('app')">重置流程</button>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="card">
+        <h3>功能2：合伙人 APP · 立刷进件门店认证</h3>
+        <p class="path">页面路径：嘉联合伙人 APP → 首页 → 立刷进件 → 【立刷进件】→ 注册（上传身份证 → 上传结算卡）→ <b>门店认证</b> → 设备绑定 → 实名认证<br>原型<b>只从门店认证页起</b>，前面的进件步骤为现有流程、本次不改</p>
+        <p style="margin:0 0 10px;font-size:13px">判定条件、提示文案、是否报备与功能1<b>完全一致</b>（同一套服务端校验），差异只在展示形态与跳转落点。</p>
+        <table>
+          <tr><th>差异点</th><th>说明</th></tr>
+          <tr><td>门店认证页字段</td><td>APP 门店认证页<b>没有「结算信息」分组</b>，只有门店信息（入网地区／详细地址／行业类别／门店名称／联系方式）+ 三张经营照片；结算卡在前一步的「注册-上传结算卡」页录入</td></tr>
+          <tr><td>审核未通过的跳转</td><td>跳 APP 内<b>注册-上传结算卡</b>页（nav 为 <code>‹ ✕ 注册</code>），<b>合伙人可直接代传结算卡照片</b>，无需商户本人登录公众号</td></tr>
+          <tr><td>提示形态</td><td>APP 内弹窗／Toast，不跳公众号 H5</td></tr>
+          <tr><td>可复用的现有交互</td><td>人工审核弹窗「结算卡照片多次识别未通过，确认是否提交人工审核」与 H5 一致；三要素失败 Toast 为「身份信息认证未通过，请核对姓名、身份证号、结算卡号」</td></tr>
+        </table>
+        <div class="warn">⚠️ 门店认证页底部按钮文案<b>待确认</b>（实际截图中被裁切，此处按 APP 其它页样式暂用【下一步】）。</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 功能3 ============ -->
+<div id="v-api" class="hide">
+  <div class="statebar" id="sb-api"></div>
+  <div class="wrap">
+    <div class="stage">
+      <div class="bar" style="margin-top:0">
+        <button onclick="callApi()">发起调用 merch-shop-register</button>
+      </div>
+      <pre id="apiout" style="margin-top:12px">// 选一个状态，点【发起调用】看请求与响应</pre>
+    </div>
+    <div class="panel">
+      <div class="card">
+        <h3>功能3：开放平台 · 门店资料提交接口加拦截</h3>
+        <p class="path">接口：<code>merch-shop-register</code> ｜ https://openapi.jlpay.com/access/charge/merch-shop-register</p>
+        <p style="margin:0 0 10px;font-size:13px"><b>现状问题</b>：该接口入参只有门店地区／MCC／名称／联系方式／三张照片，<b>没有任何结算卡状态前置条件</b>；实名认证接口 <code>merch-register</code> 的对接说明又明确「3 次自动校验不通过，流转到人工审核……<b>不影响后续入网流程</b>」。渠道商因此可在结算卡未通过时直接完成门店认证并报备银联，与公众号 H5 是同一个口子。</p>
+        <p style="margin:0 0 10px;font-size:13px"><b>本次改动</b>：接口入参<b>不变</b>，服务端在受理门店资料、发起报备前先校验该 <code>merchNo</code> 的 <code>bankCardStatus</code>，未通过时返回业务失败码且不落报备。</p>
+        <table>
+          <tr><th>结算卡状态</th><th>ret_code</th><th>ret_msg（建议）</th><th>渠道商应做什么</th></tr>
+          <tr><td><span class="st s3">已完成</span></td><td>00</td><td>处理成功</td><td>—</td></tr>
+          <tr><td><span class="st s1">审核中</span></td><td>（待技术确定）</td><td>结算卡审核中，请稍后重试</td><td>轮询 <code>auth-step-query</code>，转「已完成」后重新提交</td></tr>
+          <tr><td><span class="st s2">审核未通过</span></td><td>（待技术确定）</td><td>结算卡审核未通过，请重新提交结算卡信息</td><td>调用修改结算卡接口</td></tr>
+          <tr><td><span class="st s0">待确认结算卡</span></td><td>（待技术确定）</td><td>请先确认结算卡信息</td><td>非首次入网需先确认结算卡</td></tr>
+        </table>
+        <div class="warn">⚠️ <b>「待确认结算卡」只在接口端存在</b>：渠道商调用 <code>repeat-register</code> 完成非首次入网后，没有任何环节强制它先确认结算卡，可以直接调 <code>merch-shop-register</code>。商户端由「入网信息确认」前置挡住，因此不设这个分支。</div>
+        <div class="warn">⚠️ <code>repeat-register</code> 接口文档原文：使用该接口入网的商户<b>无法登录立刷电签版公众号</b>。被拦下后<b>唯一恢复路径是渠道商调用修改结算卡接口</b>，必须写进对接说明，否则渠道商会卡死。</div>
+        <p style="margin:12px 0 0;font-size:13px"><b>查询侧不改造</b>：<code>auth-step-query</code> 已返回 <code>bankCardStatus</code> 与 <code>shopAuthStatus</code>，只需在接口文档补充「门店资料提交的前置条件为 bankCardStatus=3」。</p>
+      </div>
+      <div class="card">
+        <h3>三个入口的一致性</h3>
+        <table>
+          <tr><th>入口</th><th>校验位置</th><th>拦住后怎么恢复</th></tr>
+          <tr><td>立刷公众号 H5 门店认证</td><td rowspan="3">统一在<b>服务端发起银联报备前</b>，三端共用同一套判断</td><td>商户自助：首页待办 → 实名认证页重传结算卡</td></tr>
+          <tr><td>合伙人 APP 立刷进件</td><td>合伙人代传：注册-上传结算卡页重新上传</td></tr>
+          <tr><td>开放平台 merch-shop-register</td><td>渠道商调用修改结算卡接口</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* 页面栈：go() 入栈，back() 出栈，close_() 回起点 */
+
+var START = { h5:'shop', app:'shop' };
+
+var S = {
+  h5 : { stack:['shop'], bcs:'3', shopSubmitted:false, autoReported:false },
+  app: { stack:['shop'], bcs:'3', shopSubmitted:false, autoReported:false },
+  api: { bcs:'3' }
+};
+
+/* 状态元数据：商户端只有 3 个，接口端多一个待确认 */
+var STATES = [
+  { v:'3', name:'已完成',     desc:'正常放行' },
+  { v:'1', name:'审核中',     desc:'OCR 3 次不一致后已提交人工审核' },
+  { v:'2', name:'审核未通过', desc:'人工／系统审核驳回' }
+];
+var API_STATES = STATES.concat([{ v:'0', name:'待确认结算卡', desc:'非首次入网需确认结算卡（接口端专有）' }]);
+
+function statesOf(app){ return app === 'api' ? API_STATES : STATES; }
+function meta(app){
+  var v = S[app].bcs, list = statesOf(app);
+  for (var i=0;i<list.length;i++) if (list[i].v === v) return list[i];
+  return list[0];
+}
+
+function renderStateBar(app){
+  var list = statesOf(app), m = meta(app), h = '<span class="lbl">当前结算卡认证状态</span>';
+  for (var i=0;i<list.length;i++){
+    var s = list[i], on = s.v === S[app].bcs;
+    h += '<button class="seg' + (on ? ' on v' + s.v : '') + '" onclick="setState(\'' + app + '\',\'' + s.v + '\')">' + s.name + '</button>';
+  }
+  h += '<span class="now">现在：<b>' + m.name + '</b> · ' + m.desc + '</span>';
+  document.getElementById('sb-' + app).innerHTML = h;
+}
+
+function setState(app, v){
+  S[app].bcs = v;
+  renderStateBar(app);
+  if (app !== 'api') render(app);
+}
+
+function cur(app){ return S[app].stack[S[app].stack.length - 1]; }
+
+/* ---------- 页面片段 ---------- */
+function photoRow(label){
+  return '<div class="row"><b>' + label + '</b><span class="ph">＋</span></div>';
+}
+function shopFields(withSettle, firstLabel){
+  var h = '<div class="grp"><h4>门店信息</h4><div class="list">' +
+    '<div class="row"><b>' + firstLabel + '</b><span class="v">广东省深圳市南山区</span></div>' +
+    '<div class="row"><b>详细地址</b><span class="v">粤海街道高新南四道17号</span></div>' +
+    '<div class="row"><b>行业类别</b><span class="v">电子设备商店</span></div>' +
+    '<div class="row"><b>门店名称</b><span class="v">巨省心电商店</span></div>' +
+    '<div class="row"><b>联系方式</b><span class="v">131****7338</span></div>' +
+    '</div></div>';
+  if (withSettle){
+    h += '<div class="grp"><h4>结算信息</h4><div class="list">' +
+      '<div class="row"><b>结算卡</b><span class="v">6214 **** **** 5446（反显不可改）</span></div>' +
+      '<div class="row"><b>结算卡开户行</b><span class="v">招商银行深圳爱华支行</span></div>' +
+      '</div></div>';
+  }
+  h += '<div class="grp"><h4>经营照片</h4><div class="list">' +
+    photoRow('上传门头照') + photoRow('上传经营场所照') + photoRow('上传收银台照') +
+    '</div></div>';
+  return h;
+}
+function resultScreen(app){
+  var auto = S[app].autoReported;
+  return '<div style="padding:70px 24px;text-align:center">' +
+    '<div style="font-size:44px;color:var(--green);line-height:1">✓</div>' +
+    '<div style="margin-top:12px;font-size:16px;font-weight:600">门店认证已提交</div>' +
+    '<div style="margin-top:8px;font-size:13px;color:var(--sub);line-height:1.8">' +
+      (auto ? '结算卡审核通过<br><b style="color:var(--markline)">系统已自动补发银联渠道报备</b><br>商户无需重新提交门店认证'
+            : '已发起银联渠道报备<br>按现有逻辑返回成功／失败／认证中') +
+    '</div></div>' +
+    '<div class="btnbar"><button class="btn" onclick="reset(\'' + app + '\')">重新演示</button></div>';
+}
+
+/* ---------- 各端页面 ---------- */
+var H5 = {
+  shop: {
+    title:'门店认证', sub:'epass.jlpay.com',
+    body:function(){
+      return shopFields(true, '门店地区') +
+        '<div class="hint">页面字段与布局本次不改，改动只发生在点【提交】之后。</div>' +
+        '<div class="btnbar"><button class="btn" onclick="submitShop(\'h5\')">提交</button></div>';
+    }
+  },
+  realname: {
+    title:'实名认证', sub:'epass.jlpay.com',
+    body:function(){
+      return '<div class="errbar">❗ 系统结算账号与照片不一致</div>' +
+        '<div class="grp"><h4>入网结算卡</h4>' +
+        '<div class="cardpic" onclick="reupload(\'h5\')">点击重新上传<br>结算卡卡号面</div>' +
+        '<div class="list">' +
+        '<div class="row"><b>开户名称</b><span class="v">*海</span></div>' +
+        '<div class="row"><b>结算卡</b><span>上传结算卡照片后自动识别</span></div>' +
+        '</div></div>' +
+        '<div class="grp"><h4>入网地址</h4>' +
+        '<div class="infobar">请确保入网地址与交易地址一致，避免影响正常交易</div>' +
+        '<div class="list">' +
+        '<div class="row"><b>入网地区</b><span class="v">广东省深圳市南山区</span></div>' +
+        '<div class="row"><b>详细地址</b><span class="v">粤海街道高新南四道17号</span></div>' +
+        '</div></div>' +
+        '<div class="hint">本页为现有页面，报错条与重传交互直接复用，本次不改。</div>' +
+        '<div class="btnbar"><button class="btn" onclick="reupload(\'h5\')">确认继续</button></div>';
+    }
+  },
+  result: { title:'门店认证', sub:'epass.jlpay.com', body:function(){ return resultScreen('h5'); } }
+};
+
+var APP = {
+  shop: {
+    title:'门店认证',
+    body:function(){
+      return shopFields(false, '入网地区') +
+        '<div class="hint">合伙人 APP 门店认证页没有「结算信息」分组，结算卡在上一步的「注册-上传结算卡」页录入。</div>' +
+        '<div class="btnbar"><button class="btn" onclick="submitShop(\'app\')">下一步</button></div>';
+    }
+  },
+  card: {
+    title:'注册',
+    body:function(){
+      return '<div class="errbar">❗ 系统结算账号与照片不一致</div>' +
+        '<div class="grp"><h4>上传结算卡</h4>' +
+        '<div class="cardpic" onclick="reupload(\'app\')">点击重新上传<br>结算卡卡号面</div>' +
+        '<div class="list">' +
+        '<div class="row"><b>结算卡</b><span class="v">6214 **** **** 5446</span></div>' +
+        '<div class="row"><b>结算卡开户行</b><span class="v">招商银行股份有限公司深圳总行大厦 ›</span></div>' +
+        '</div></div>' +
+        '<div class="grp"><h4>入网地址</h4>' +
+        '<div class="infobar">请确保入网地址与交易地址一致，避免影响正常交易</div>' +
+        '<div class="list">' +
+        '<div class="row"><b>入网地区</b><span class="v">广东省深圳市南山区</span></div>' +
+        '<div class="row"><b>详细地址</b><span class="v">粤海街道高新区社区万德莱大厦北座</span></div>' +
+        '</div></div>' +
+        '<div class="hint">本页为现有页面，合伙人在此代商户上传结算卡照片，本次不改。</div>' +
+        '<div class="btnbar"><button class="btn" onclick="reupload(\'app\')">下一步</button>' +
+        '<div class="agree">✓ 我已阅读并同意《立刷电签版服务协议》和《隐私权政策》</div></div>';
+    }
+  },
+  result: { title:'门店认证', body:function(){ return resultScreen('app'); } }
+};
+
+function SCREENS(app){ return app === 'h5' ? H5 : APP; }
+
+/* ---------- 渲染与路由 ---------- */
+function render(app){
+  var name = cur(app), def = SCREENS(app)[name], atStart = S[app].stack.length <= 1;
+  document.getElementById('nav-' + app).innerHTML =
+    '<span class="lbtns">' +
+      '<b class="' + (atStart ? 'off' : '') + '" title="返回上一页" onclick="back(\'' + app + '\')">‹</b>' +
+      '<b class="' + (atStart ? 'off' : '') + '" title="关闭，回到起点" onclick="close_(\'' + app + '\')">✕</b>' +
+    '</span>' + def.title + (def.sub ? '<small>' + def.sub + '</small>' : '');
+  document.getElementById('sc-' + app).innerHTML = def.body();
+}
+
+function go(app, name){ S[app].stack.push(name); render(app); }
+function back(app){
+  if (S[app].stack.length <= 1) { toast(app, '已在起点页'); return; }
+  S[app].stack.pop(); render(app);
+}
+function close_(app){
+  if (S[app].stack.length <= 1) { toast(app, '已在起点页'); return; }
+  S[app].stack = [START[app]]; render(app);
+}
+function reset(app){
+  S[app].stack = [START[app]];
+  S[app].shopSubmitted = false;
+  S[app].autoReported = false;
+  render(app);
+}
+
+function clearLayer(app){
+  var sc = document.getElementById('sc-' + app);
+  var old = sc.querySelectorAll('.toast,.mask');
+  for (var i=0;i<old.length;i++) old[i].remove();
+}
+function toast(app, txt){
+  clearLayer(app);
+  var d = document.createElement('div');
+  d.className = 'toast'; d.textContent = txt;
+  document.getElementById('sc-' + app).appendChild(d);
+  setTimeout(function(){ if (d.parentNode) d.remove(); }, 2600);
+}
+function dialog(app, txt, okTxt, onOk){
+  clearLayer(app);
+  var m = document.createElement('div');
+  m.className = 'mask';
+  m.innerHTML = '<div class="dlg"><p>' + txt + '</p><div class="acts">' +
+    '<button data-k="cancel">取消</button><button data-k="ok">' + okTxt + '</button></div></div>';
+  m.querySelector('[data-k=cancel]').onclick = function(){ m.remove(); };
+  m.querySelector('[data-k=ok]').onclick = function(){ m.remove(); onOk(); };
+  document.getElementById('sc-' + app).appendChild(m);
+}
+
+/* ---------- 业务动作 ---------- */
+function submitShop(app){
+  S[app].shopSubmitted = true;
+  var v = S[app].bcs;
+  if (v === '3'){ S[app].autoReported = false; go(app, 'result'); return; }
+  if (v === '1'){ toast(app, '银行卡审核中，请稍后刷新查看'); return; }
+  /* v === '2' */
+  dialog(app, '银行审核未通过，请重新提交银行卡信息', '去重新提交', function(){
+    go(app, app === 'h5' ? 'realname' : 'card');
+  });
+}
+
+/* 重传结算卡 → 模拟审核结果 */
+function reupload(app){
+  clearLayer(app);
+  var m = document.createElement('div');
+  m.className = 'mask';
+  m.innerHTML = '<div class="dlg"><p>结算卡已重新提交。<br>模拟审核结果：</p><div class="acts">' +
+    '<button data-k="cancel">取消</button>' +
+    '<button data-k="pass">审核通过</button>' +
+    '<button data-k="fail" style="color:var(--red)">审核不通过</button>' +
+    '</div></div>';
+  m.querySelector('[data-k=cancel]').onclick = function(){ m.remove(); };
+  m.querySelector('[data-k=pass]').onclick = function(){
+    m.remove();
+    S[app].bcs = '3'; renderStateBar(app);
+    if (S[app].shopSubmitted){
+      S[app].autoReported = true;
+      S[app].stack = [START[app], 'result'];
+      render(app);
+      toast(app, '结算卡审核通过，系统已自动补发银联报备');
+    } else {
+      close_(app);
+      toast(app, '结算卡审核通过');
+    }
+  };
+  m.querySelector('[data-k=fail]').onclick = function(){
+    m.remove();
+    S[app].bcs = '2'; renderStateBar(app); render(app);
+    toast(app, '结算卡审核未通过，仍不发起报备');
+  };
+  document.getElementById('sc-' + app).appendChild(m);
+}
+
+/* ---------- 功能3：接口模拟 ---------- */
+function callApi(){
+  var v = S.api.bcs;
+  var map = {
+    '3': { code:'00',           msg:'处理成功' },
+    '1': { code:'（待技术确定）', msg:'结算卡审核中，请稍后重试' },
+    '2': { code:'（待技术确定）', msg:'结算卡审核未通过，请重新提交结算卡信息' },
+    '0': { code:'（待技术确定）', msg:'请先确认结算卡信息' }
+  };
+  var r = map[v], ok = v === '3';
+  var req = 'POST /access/charge/merch-shop-register\n' +
+    '{\n  "merchNo": "N100000000000001",\n  "shopName": "巨省心电商店",\n' +
+    '  "mccCode": "5732",\n  "shopProvince": "广东省",\n  "shopCity": "深圳市",\n' +
+    '  "shopAddress": "粤海街道高新南四道17号",\n  "doorPhoto": "...",\n' +
+    '  "innerPhoto": "...",\n  "cashierPhoto": "..."\n}';
+  var res = '// 服务端先查 bankCardStatus = ' + v + '（' + meta('api').name + '）\n' +
+    (ok ? '// 等于 3 → 受理并发起银联渠道报备\n' : '// 不等于 3 → 不发起报备，直接返回失败\n') +
+    '{\n  "ret_code": "' + r.code + '",\n  "ret_msg": "' + r.msg + '"\n}';
+  document.getElementById('apiout').textContent = req + '\n\n' + res;
+}
+
+/* ---------- Tab ---------- */
+document.querySelectorAll('.tab').forEach(function(t){
+  t.onclick = function(){
+    document.querySelectorAll('.tab').forEach(function(x){ x.classList.remove('on'); });
+    t.classList.add('on');
+    ['h5','app','api'].forEach(function(k){
+      document.getElementById('v-' + k).classList.toggle('hide', k !== t.dataset.t);
+    });
+  };
+});
+
+/* ---------- 初始化 ---------- */
+['h5','app','api'].forEach(renderStateBar);
+render('h5'); render('app');
+</script>
+</body>
+</html>
