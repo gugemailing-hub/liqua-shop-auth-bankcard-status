@@ -36,6 +36,8 @@
 
   .wrap{display:flex;gap:20px;padding:14px 24px 48px;align-items:flex-start;flex-wrap:wrap}
   .stage{flex:0 0 auto;width:340px}
+  .stagetitle{font-size:13px;font-weight:600;margin:0 0 8px;padding-left:2px}
+  .stagetitle small{display:block;font-weight:400;font-size:11.5px;color:var(--sub);margin-top:2px}
   .panel{flex:1;min-width:420px}
   .hide{display:none}
 
@@ -115,7 +117,7 @@
 
 <header>
   <h1>立刷门店认证校验结算卡状态 · 交互原型</h1>
-  <p>V0.6 ｜ 2026/09/15</p>
+  <p>V0.6 ｜ 2026/09/22</p>
 </header>
 
 <div class="tabs">
@@ -129,28 +131,53 @@
   <div class="statebar" id="sb-h5"></div>
   <div class="wrap">
     <div class="stage">
+      <div class="stagetitle">入网路径一 · 新增门店<small>入网信息确认 → 门店认证 → 设备绑定</small></div>
       <div class="phone">
         <div class="nav" id="nav-h5"></div>
         <div class="screen" id="sc-h5"></div>
       </div>
       <div class="bar">
-        <button onclick="reset('h5')">重置流程</button>
+        <button onclick="reset('h5')">重置这条路径</button>
+      </div>
+    </div>
+    <div class="stage">
+      <div class="stagetitle">入网路径二 · 选择门店<small>已有 2 个小微商户，复用已有门店，没有门店认证环节</small></div>
+      <div class="phone">
+        <div class="nav" id="nav-h5b"></div>
+        <div class="screen" id="sc-h5b"></div>
+      </div>
+      <div class="bar">
+        <button onclick="reset('h5b')">重置这条路径</button>
       </div>
     </div>
     <div class="panel">
       <div class="card">
-        <h3>功能1：立刷公众号 H5 · 门店认证提交校验</h3>
-        <p class="path">页面路径：立刷电签版公众号 → 首页 → 待办事项「您还未完成门店认证」→ <b>门店认证</b>（原型从门店认证页起）</p>
-        <p style="margin:0 0 10px;font-size:13px">页面字段与布局<b>不改</b>，只在点击【提交】后、<b>发起银联渠道报备前</b>增加结算卡认证状态校验。</p>
+        <h3>功能1：立刷公众号 H5 · 入网信息确认与门店认证</h3>
+        <p class="path">入网路径一（新增门店）：首页 →【新增门店】→ 门店管理 →【新增门店】→ <b>入网信息确认</b> → <b>门店认证</b> → 设备绑定<br>
+        入网路径二（选择门店，已有 2 个小微商户）：首页 →【新增门店】→ 门店管理 →【新增门店】→ 选择门店 →【确认】→ <b>入网信息确认</b> → 设备绑定（<b>这条路径没有门店认证环节</b>）</p>
+        <p style="margin:0 0 10px;font-size:13px">两个页面的字段与布局<b>都不改</b>，只在两处加结算卡认证状态校验：入网信息确认页点【确认继续】时、门店认证页点【提交】后发起银联渠道报备前。左侧两台手机分别是两条入网路径，上方切换结算卡状态时两条路径同时生效。</p>
+
+        <p style="margin:14px 0 4px;font-size:13px"><b>页面一：入网信息确认（两条路径都有，重复入网复用原结算卡）</b></p>
+        <table>
+          <tr><th>状态</th><th>是否拦截</th><th>对外提示</th><th>后续走向</th></tr>
+          <tr><td><span class="st s3">已完成</span></td><td>不拦</td><td>无</td><td>与原有逻辑相同，进入下一步</td></tr>
+          <tr><td><span class="st s1">审核中</span></td><td>不拦</td><td>无</td><td>与原有逻辑相同，进入下一步（沿用现有：审核中可继续，通过后再更新）</td></tr>
+          <tr><td><span class="st s2">审核未通过</span></td><td><b>拦</b></td><td>结算卡审核未通过，请重新提交结算卡信息</td><td><b>停留本页</b>，商户在本页重新上传或更换结算卡后再点【确认继续】</td></tr>
+          <tr><td><span class="st s0">待确认</span></td><td>不拦</td><td>无</td><td>本页就是确认结算卡的地方，确认或更换后置为已完成／审核中</td></tr>
+        </table>
+        <div class="warn">⚠️ <b>入网信息确认页的拦截目的与报备口径</b>：选择门店路径复用已有门店、<b>全程没有门店认证环节</b>，本页是这条路上唯一的拦截点。<b>未更换结算卡不触发报备；更换了结算卡，触发的是原有银联商户号的「更新类型」报备，不是新增报备。</b></div>
+        <p style="margin:6px 0 0;font-size:12.5px;color:var(--red);font-weight:600">⚠️ 审核未通过用 Toast 提示，不弹窗、不加按钮、不跳转——本页本身就能改结算卡。</p>
+
+        <p style="margin:18px 0 4px;font-size:13px"><b>页面二：门店认证（仅新增门店路径有）</b></p>
         <table>
           <tr><th>状态</th><th>门店认证资料</th><th>是否报备</th><th>对外提示</th><th>后续走向</th></tr>
           <tr><td><span class="st s3">已完成</span></td><td>正常保存</td><td>正常发起</td><td>无</td><td>与原有逻辑相同，进入下一步</td></tr>
           <tr><td><span class="st s1">审核中</span></td><td>正常保存</td><td>不发起</td><td>无</td><td>进入下一步绑机操作，卡审核通过后系统自动补发报备，已绑终端按现有逻辑自动重新报备</td></tr>
           <tr><td><span class="st s2">审核未通过</span></td><td>正常保存</td><td>不发起</td><td>结算卡审核未通过，请重新提交结算卡信息</td><td>跳<b>实名认证页</b>，复用现有报错条 + 重传交互</td></tr>
         </table>
-        <div class="warn">⚠️ 商户端<b>没有「待确认结算卡」这个状态分支</b>：非首次入网的「入网信息确认」是门店认证的前置步骤，未确认结算卡就进不了门店认证页，服务端保留判定仅作兜底。该状态只在开放平台接口侧是正式返回码，见功能3。</div>
+        <div class="warn">⚠️ <b>「待确认结算卡」在入网信息确认页处理</b>：该状态表示商户还没在入网信息确认页确认过结算卡；门店认证环节若仍是该状态，同样不报备并提示「请先确认结算卡信息」，引导商户回到该页。开放平台接口侧是正式返回码，见功能3。</div>
         <p style="margin:10px 0 0;font-size:12.5px;color:var(--red);font-weight:600">⚠️ 门店认证状态与待办：① 结算卡审核中——门店认证资料已保存、未报备，门店认证状态置「审核中」，首页不展示门店认证待办；② 结算卡审核未通过——门店认证状态同样置「审核中」，首页不展示门店认证待办，只展示现有「您还未通过实名认证 去认证」待办；③ 补发报备后按现有逻辑流转：成功为「已完成」，失败展示「您还未通过门店认证」待办。</p>
-        <p style="margin:10px 0 0;font-size:12.5px;color:var(--sub)">说明：门店认证页字段与布局不改，结算卡号为现有反显、不可修改；实名认证页为现有页面，顶部报错条与重传交互直接复用；提交后的下一步页面与原有逻辑相同，本次不改。</p>
+        <p style="margin:10px 0 0;font-size:12.5px;color:var(--sub)">说明：入网信息确认页反显商户姓名、结算卡号与结算卡照片并支持修改；门店认证页结算卡号为现有反显、不可修改；实名认证页为现有页面，顶部报错条与重传交互直接复用；两个页面之后的下一步页面与原有逻辑相同，本次不改。</p>
       </div>
     </div>
   </div>
@@ -231,10 +258,11 @@
 <script>
 /* 页面栈：go() 入栈，back() 出栈，close_() 回起点 */
 
-var START = { h5:'shop', app:'shop' };
+var START = { h5:'confirm', h5b:'confirm', app:'shop' };
 
 var S = {
-  h5 : { stack:['shop'], bcs:'3', shopSubmitted:false, autoReported:false },
+  h5 : { stack:['confirm'], bcs:'3', shopSubmitted:false, autoReported:false },
+  h5b: { stack:['confirm'], bcs:'3', shopSubmitted:false, autoReported:false },
   app: { stack:['shop'], bcs:'3', shopSubmitted:false, autoReported:false },
   api: { bcs:'3' }
 };
@@ -252,6 +280,8 @@ var API_STATES = [
 ];
 
 function statesOf(app){ return app === 'api' ? API_STATES : STATES; }
+/* 功能1 的两条路径共用一个状态条：切状态时两台手机一起变 */
+function twin(app){ return app === 'h5' ? ['h5','h5b'] : [app]; }
 function meta(app){
   var v = S[app].bcs, list = statesOf(app);
   for (var i=0;i<list.length;i++) if (list[i].v === v) return list[i];
@@ -269,11 +299,11 @@ function renderStateBar(app){
 }
 
 function setState(app, v){
-  var prev = S[app].bcs;
-  S[app].bcs = v;
+  twin(app).forEach(function(k){
+    S[k].bcs = v;
+    if (k !== 'api') render(k);
+  });
   renderStateBar(app);
-  if (app === 'api') return;
-  render(app);
 }
 
 function cur(app){ return S[app].stack[S[app].stack.length - 1]; }
@@ -307,6 +337,24 @@ function nextScreen(){
 
 /* ---------- 各端页面 ---------- */
 var H5 = {
+  confirm: {
+    title:'入网信息确认', sub:'epass.jlpay.com',
+    body:function(app){
+      return '<div class="grp"><h4>入网结算卡</h4>' +
+        '<div class="cardpic" onclick="changeCard(\'' + app + '\')">点击重新上传<br>或更换结算卡</div>' +
+        '<div class="list">' +
+        '<div class="row"><b>开户名称</b><span class="v">*林</span></div>' +
+        '<div class="row"><b>结算卡</b><span class="v">6214 **** **** 4877</span></div>' +
+        '</div></div>' +
+        '<div class="grp"><h4>入网地址</h4>' +
+        '<div class="infobar">请确保入网地址与交易地址一致，避免影响正常交易</div>' +
+        '<div class="list">' +
+        '<div class="row"><b>入网地区</b><span class="v">广东省深圳市南山区</span></div>' +
+        '<div class="row"><b>详细地址</b><span class="v">粤海街道高新南四道17号</span></div>' +
+        '</div></div>' +
+        '<div class="btnbar"><button class="btn" onclick="submitConf(\'' + app + '\')">确认继续</button></div>';
+    }
+  },
   shop: {
     title:'门店认证', sub:'epass.jlpay.com',
     body:function(){
@@ -367,7 +415,7 @@ var APP = {
   result: { title:'门店认证', body:nextScreen }
 };
 
-function SCREENS(app){ return app === 'h5' ? H5 : APP; }
+function SCREENS(app){ return app === 'app' ? APP : H5; }
 
 /* ---------- 渲染与路由 ---------- */
 function render(app){
@@ -377,7 +425,7 @@ function render(app){
       '<b class="' + (atStart ? 'off' : '') + '" title="返回上一页" onclick="back(\'' + app + '\')">‹</b>' +
       '<b class="' + (atStart ? 'off' : '') + '" title="关闭，回到起点" onclick="close_(\'' + app + '\')">✕</b>' +
     '</span>' + def.title + (def.sub ? '<small>' + def.sub + '</small>' : '');
-  document.getElementById('sc-' + app).innerHTML = def.body();
+  document.getElementById('sc-' + app).innerHTML = def.body(app);
 }
 
 function go(app, name){ S[app].stack.push(name); render(app); }
@@ -437,6 +485,18 @@ function reupload(app){
   back(app);
 }
 
+/* 入网信息确认页点【确认继续】：未通过停留本页，其余按入网路径走下一步 */
+function submitConf(app){
+  if (S[app].bcs === '2'){ toast(app, '结算卡审核未通过，请重新提交结算卡信息'); return; }
+  go(app, app === 'h5' ? 'shop' : 'result');
+}
+
+/* 在本页更换结算卡：状态回到已完成／审核中，停留本页 */
+function changeCard(app){
+  clearLayer(app);
+  setState('h5', '3');
+}
+
 /* ---------- 功能3：接口模拟 ---------- */
 function callApi(){
   var v = S.api.bcs;
@@ -471,7 +531,7 @@ document.querySelectorAll('.tab').forEach(function(t){
 
 /* ---------- 初始化 ---------- */
 ['h5','app','api'].forEach(renderStateBar);
-render('h5'); render('app');
+render('h5'); render('h5b'); render('app');
 </script>
 </body>
 </html>
