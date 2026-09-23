@@ -117,7 +117,7 @@
 
 <header>
   <h1>立刷门店认证校验结算卡状态 · 交互原型</h1>
-  <p>V0.7 ｜ 2026/09/22</p>
+  <p>V0.8 ｜ 2026/09/23</p>
 </header>
 
 <div class="tabs">
@@ -131,23 +131,12 @@
   <div class="statebar" id="sb-h5"></div>
   <div class="wrap">
     <div class="stage">
-      <div class="stagetitle">入网路径一 · 新增门店<small>入网信息确认 → 门店认证 → 设备绑定</small></div>
       <div class="phone">
         <div class="nav" id="nav-h5"></div>
         <div class="screen" id="sc-h5"></div>
       </div>
       <div class="bar">
-        <button onclick="reset('h5')">重置这条路径</button>
-      </div>
-    </div>
-    <div class="stage">
-      <div class="stagetitle">入网路径二 · 选择门店<small>已有 2 个小微商户，复用已有门店，没有门店认证环节</small></div>
-      <div class="phone">
-        <div class="nav" id="nav-h5b"></div>
-        <div class="screen" id="sc-h5b"></div>
-      </div>
-      <div class="bar">
-        <button onclick="reset('h5b')">重置这条路径</button>
+        <button onclick="reset('h5')">重置流程</button>
       </div>
     </div>
     <div class="panel">
@@ -155,29 +144,18 @@
         <h3>功能1：立刷公众号 H5 · 入网信息确认与门店认证</h3>
         <p class="path">入网路径一（新增门店）：首页 →【新增门店】→ 门店管理 →【新增门店】→ <b>入网信息确认</b> → <b>门店认证</b> → 设备绑定<br>
         入网路径二（选择门店，已有 2 个小微商户）：首页 →【新增门店】→ 门店管理 →【新增门店】→ 选择门店 →【确认】→ <b>入网信息确认</b> → 设备绑定（<b>这条路径没有门店认证环节</b>）</p>
-        <p style="margin:0 0 10px;font-size:13px">两个页面的字段与布局<b>都不改</b>，只在两处加结算卡认证状态校验：入网信息确认页点【确认继续】时、门店认证页点【提交】后发起银联渠道报备前。左侧两台手机分别是两条入网路径，上方切换结算卡状态时两条路径同时生效。</p>
+        <p style="margin:0 0 10px;font-size:13px">两个页面的字段与布局<b>都不改</b>，只在两处加结算卡认证状态校验：入网信息确认页点【确认继续】时、门店认证页点【提交】后发起银联渠道报备前。<b>两条入网路径在入网信息确认页上的判定与交互完全一致</b>，左侧手机按路径一（页最全）演示；路径二在入网信息确认页通过后直接进设备绑定，没有门店认证环节。</p>
 
-        <p style="margin:14px 0 4px;font-size:13px"><b>页面一：入网信息确认（两条路径都有，重复入网复用原结算卡）</b></p>
         <table>
-          <tr><th>状态</th><th>是否拦截</th><th>对外提示</th><th>后续走向</th></tr>
-          <tr><td><span class="st s3">已完成</span></td><td>不拦</td><td>无</td><td>与原有逻辑相同，进入下一步</td></tr>
-          <tr><td><span class="st s1">审核中</span></td><td>不拦</td><td>无</td><td>与原有逻辑相同，进入下一步（沿用现有：审核中可继续，通过后再更新）</td></tr>
-          <tr><td><span class="st s2">审核未通过</span></td><td><b>拦</b></td><td>结算卡审核未通过，请重新提交结算卡信息</td><td><b>停留本页</b>，商户在本页重新上传或更换结算卡后再点【确认继续】</td></tr>
-          <tr><td><span class="st s0">待确认</span></td><td>不拦</td><td>无</td><td>本页就是确认结算卡的地方，确认或更换后置为已完成／审核中</td></tr>
+          <tr><th>结算卡状态</th><th>入网信息确认页<br><span style="font-weight:400">两条路径都有</span></th><th>门店认证页<br><span style="font-weight:400">仅路径一（新增门店）有</span></th></tr>
+          <tr><td><span class="st s3">已完成</span></td><td>不拦，与原有逻辑相同进入下一步</td><td>资料正常保存，<b>正常发起报备</b>，与原有逻辑相同进入下一步</td></tr>
+          <tr><td><span class="st s1">审核中</span></td><td>不拦、不提示（沿用现有：审核中可继续，通过后再更新）</td><td>资料正常保存，<b>不报备、不提示</b>，进入下一步绑机；卡审核通过后系统自动补发报备，已绑终端按现有逻辑自动重新报备</td></tr>
+          <tr><td><span class="st s2">审核未通过</span></td><td><b>拦</b>：弹窗「结算卡审核未通过，请重新提交结算卡信息」，<b>单按钮【我知道了】，点完停留本页</b>，商户在本页重新上传或更换结算卡后再点【确认继续】</td><td><b>只拦报备不拦资料</b>：资料正常保存、不报备；弹窗同一文案，点【确认】跳<b>实名认证页</b>，复用现有报错条 + 重传交互</td></tr>
+          <tr><td><span class="st s0">待确认</span></td><td>不拦，<b>本页就是确认结算卡的地方</b>，确认沿用原卡或更换新卡后置为已完成／审核中</td><td>正常流程走不到；若仍是该状态，同样不报备并提示「请先确认结算卡信息」，引导回入网信息确认页</td></tr>
         </table>
-        <div class="warn">⚠️ <b>入网信息确认页的拦截目的与报备口径</b>：选择门店路径复用已有门店、<b>全程没有门店认证环节</b>，本页是这条路上唯一的拦截点。<b>未更换结算卡不触发报备；更换了结算卡，触发的是原有银联商户号的「更新类型」报备，不是新增报备。</b></div>
-        <p style="margin:6px 0 0;font-size:12.5px;color:var(--red);font-weight:600">⚠️ 审核未通过用 Toast 提示，不弹窗、不加按钮、不跳转——本页本身就能改结算卡。</p>
-
-        <p style="margin:18px 0 4px;font-size:13px"><b>页面二：门店认证（仅新增门店路径有）</b></p>
-        <table>
-          <tr><th>状态</th><th>门店认证资料</th><th>是否报备</th><th>对外提示</th><th>后续走向</th></tr>
-          <tr><td><span class="st s3">已完成</span></td><td>正常保存</td><td>正常发起</td><td>无</td><td>与原有逻辑相同，进入下一步</td></tr>
-          <tr><td><span class="st s1">审核中</span></td><td>正常保存</td><td>不发起</td><td>无</td><td>进入下一步绑机操作，卡审核通过后系统自动补发报备，已绑终端按现有逻辑自动重新报备</td></tr>
-          <tr><td><span class="st s2">审核未通过</span></td><td>正常保存</td><td>不发起</td><td>结算卡审核未通过，请重新提交结算卡信息</td><td>跳<b>实名认证页</b>，复用现有报错条 + 重传交互</td></tr>
-        </table>
-        <div class="warn">⚠️ <b>「待确认结算卡」在入网信息确认页处理</b>：该状态表示商户还没在入网信息确认页确认过结算卡；门店认证环节若仍是该状态，同样不报备并提示「请先确认结算卡信息」，引导商户回到该页。开放平台接口侧是正式返回码，见功能3。</div>
+        <div class="warn">⚠️ <b>两个页面拦的不是同一件事</b>：入网信息确认页拦的是「带着审核未通过的结算卡继续入网」，门店认证页拦的是「报备」。选择门店路径复用已有门店、<b>全程没有门店认证环节</b>，入网信息确认页是这条路上唯一的拦截点。<b>未更换结算卡不触发报备；更换了结算卡，触发的是原有银联商户号的「更新类型」报备，不是新增报备。</b></div>
         <p style="margin:10px 0 0;font-size:12.5px;color:var(--red);font-weight:600">⚠️ 门店认证状态与待办：① 结算卡审核中——门店认证资料已保存、未报备，门店认证状态置「审核中」，首页不展示门店认证待办；② 结算卡审核未通过——门店认证状态同样置「审核中」，首页不展示门店认证待办，只展示现有「您还未通过实名认证 去认证」待办；③ 补发报备后按现有逻辑流转：成功为「已完成」，失败展示「您还未通过门店认证」待办。</p>
-        <p style="margin:10px 0 0;font-size:12.5px;color:var(--sub)">说明：入网信息确认页反显商户姓名、结算卡号与结算卡照片并支持修改；门店认证页结算卡号为现有反显、不可修改；实名认证页为现有页面，顶部报错条与重传交互直接复用；两个页面之后的下一步页面与原有逻辑相同，本次不改。</p>
+        <p style="margin:10px 0 0;font-size:12.5px;color:var(--sub)">说明：入网信息确认页反显商户姓名、结算卡号与结算卡照片并支持修改；门店认证页结算卡号为现有反显、不可修改；实名认证页为现有页面，顶部报错条与重传交互直接复用；「待确认」在开放平台接口侧是正式返回码，见功能3；两个页面之后的下一步页面与原有逻辑相同，本次不改。</p>
       </div>
     </div>
   </div>
@@ -258,11 +236,10 @@
 <script>
 /* 页面栈：go() 入栈，back() 出栈，close_() 回起点 */
 
-var START = { h5:'confirm', h5b:'confirm', app:'shop' };
+var START = { h5:'confirm', app:'shop' };
 
 var S = {
   h5 : { stack:['confirm'], bcs:'3', shopSubmitted:false, autoReported:false },
-  h5b: { stack:['confirm'], bcs:'3', shopSubmitted:false, autoReported:false },
   app: { stack:['shop'], bcs:'3', shopSubmitted:false, autoReported:false },
   api: { bcs:'3' }
 };
@@ -280,8 +257,7 @@ var API_STATES = [
 ];
 
 function statesOf(app){ return app === 'api' ? API_STATES : STATES; }
-/* 功能1 的两条路径共用一个状态条：切状态时两台手机一起变 */
-function twin(app){ return app === 'h5' ? ['h5','h5b'] : [app]; }
+function twin(app){ return [app]; }
 function meta(app){
   var v = S[app].bcs, list = statesOf(app);
   for (var i=0;i<list.length;i++) if (list[i].v === v) return list[i];
@@ -466,6 +442,15 @@ function dialog(app, txt, okTxt, onOk){
   m.querySelector('[data-k=ok]').onclick = function(){ m.remove(); onOk(); };
   document.getElementById('sc-' + app).appendChild(m);
 }
+function alertDlg(app, txt, okTxt){
+  clearLayer(app);
+  var m = document.createElement('div');
+  m.className = 'mask';
+  m.innerHTML = '<div class="dlg"><p>' + txt + '</p><div class="acts">' +
+    '<button data-k="ok" style="color:var(--blue)">' + okTxt + '</button></div></div>';
+  m.querySelector('[data-k=ok]').onclick = function(){ m.remove(); };
+  document.getElementById('sc-' + app).appendChild(m);
+}
 
 /* ---------- 业务动作 ---------- */
 function submitShop(app){
@@ -487,7 +472,7 @@ function reupload(app){
 
 /* 入网信息确认页点【确认继续】：未通过停留本页，其余按入网路径走下一步 */
 function submitConf(app){
-  if (S[app].bcs === '2'){ toast(app, '结算卡审核未通过，请重新提交结算卡信息'); return; }
+  if (S[app].bcs === '2'){ alertDlg(app, '结算卡审核未通过，请重新提交结算卡信息', '我知道了'); return; }
   go(app, app === 'h5' ? 'shop' : 'result');
 }
 
@@ -531,7 +516,7 @@ document.querySelectorAll('.tab').forEach(function(t){
 
 /* ---------- 初始化 ---------- */
 ['h5','app','api'].forEach(renderStateBar);
-render('h5'); render('h5b'); render('app');
+render('h5'); render('app');
 </script>
 </body>
 </html>
