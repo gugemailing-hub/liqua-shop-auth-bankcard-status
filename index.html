@@ -117,7 +117,7 @@
 
 <header>
   <h1>立刷门店认证校验结算卡状态 · 交互原型</h1>
-  <p>V0.11 ｜ 2026/10/22</p>
+  <p>V0.12 ｜ 2026/10/30</p>
 </header>
 
 <div class="tabs">
@@ -143,18 +143,15 @@
         <h3>功能1：立刷公众号 H5 · 入网信息确认与门店认证</h3>
         <p class="path">入网路径一（新增门店）：首页 →【新增门店】→ 门店管理 →【新增门店】→ <b>入网信息确认</b> → <b>门店认证</b> → 设备绑定<br>
         入网路径二（选择门店，已有 2 个小微商户）：首页 →【新增门店】→ 门店管理 →【新增门店】→ 选择门店 →【确认】→ <b>入网信息确认</b> → 设备绑定（<b>这条路径没有门店认证环节</b>）</p>
-        <p style="margin:0 0 10px;font-size:13px">两个页面的字段与布局<b>都不改</b>。入网信息确认页点【确认继续】时<b>对反显的结算卡照片重新识别</b>（识别结果按原有结算卡认证逻辑处理：识别不通过照片下提示重新上传，多次未通过可点【确认继续】提交人工审核，本需求不新增提示），<b>不看结算卡认证状态</b>；门店认证页点【提交】后、发起渠道报备前校验结算卡认证状态，<b>只有已完成才报备，其余状态在页面上都不提示、不拦截</b>，所以手机里不再提供状态切换。<b>拦截范围是该商户的全部渠道报备，不限于银联。</b>两条入网路径在入网信息确认页上的判定与交互完全一致，手机按路径一（页最全）演示；路径二在入网信息确认页通过后直接进设备绑定，没有门店认证环节。</p>
-
+        <p style="margin:0 0 10px;font-size:13px">两个页面的字段与布局<b>都不改</b>。<b>只有结算卡已完成才发起渠道报备</b>，拦截范围是该商户的全部渠道报备，不限于银联。</p>
         <table>
-          <tr><th>结算卡状态</th><th>入网信息确认页<br><span style="font-weight:400">两条路径都有</span></th><th>门店认证页<br><span style="font-weight:400">仅路径一（新增门店）有</span></th></tr>
-          <tr><td><span class="st s3">已完成</span></td><td>不拦，与原有逻辑相同进入下一步</td><td>资料正常保存，<b>正常发起报备</b>，与原有逻辑相同进入下一步</td></tr>
-          <tr><td><span class="st s1">审核中</span></td><td>不拦、不提示（沿用现有：审核中可继续，通过后再更新）</td><td>资料正常保存，<b>不报备、不提示</b>，进入下一步绑机；卡审核通过后系统自动补发报备，已绑终端按现有逻辑自动重新报备</td></tr>
-          <tr><td><span class="st s2">审核未通过</span></td><td>不拦、不提示（与审核中相同）</td><td>资料正常保存，<b>不报备、不提示、不跳转</b>，进入下一步绑机（与审核中相同）；⚠️<b>不会自动恢复</b>，靠首页现有待办「您还未通过实名认证 去认证」引导重传，重传后变为已完成即自动补发</td></tr>
-          <tr><td><span class="st s0">待确认</span></td><td>不拦，<b>本页就是确认结算卡的地方</b>，确认沿用原卡或更换新卡后置为已完成／审核中</td><td>正常流程走不到；若仍是该状态，同样不报备并提示「请先确认结算卡信息」，引导回入网信息确认页</td></tr>
+          <tr><th>结算卡情况</th><th>入网信息确认页<br><span style="font-weight:400">两条路径都有</span></th><th>门店认证页<br><span style="font-weight:400">仅新增门店路径有</span></th></tr>
+          <tr><td>照片重新识别不通过</td><td><b>停留本页</b>，沿用现有提示：照片下「结算卡卡号面不符合要求，请重新上传」；多次未通过显示温馨提示「结算卡照片多次识别未通过，可点击“确认继续”提交人工审核」，点【确认继续】转人工审核并进入下一步</td><td>—</td></tr>
+          <tr><td><span class="st s3">已完成</span></td><td>不拦</td><td>资料保存，<b>发起渠道报备</b></td></tr>
+          <tr><td><span class="st s1">审核中</span>／<span class="st s2">审核未通过</span></td><td>不拦、不提示</td><td>资料保存，<b>不报备、不提示、不跳转</b>，进入下一步绑机</td></tr>
+          <tr><td><span class="st s0">待确认</span></td><td>不拦，本页确认结算卡</td><td>不报备，提示「请先确认结算卡信息」</td></tr>
         </table>
-        <div class="warn">⚠️ <b>入网信息确认页只做照片重新识别</b>（识别不通过拦在本页），不看结算卡认证状态；<b>报备的拦截统一在门店认证页</b>，只有已完成才报备。选择门店路径复用已有门店、<b>全程没有门店认证环节</b>，入网信息确认页的重新识别是这条路上唯一的拦截点。<b>未更换结算卡不触发报备；更换了结算卡，触发的是原有银联商户号的「更新类型」报备，不是新增报备。</b></div>
-        <p style="margin:10px 0 0;font-size:12.5px;color:var(--red);font-weight:600">⚠️ 门店认证状态与待办：① 结算卡审核中——门店认证资料已保存、未报备，门店认证状态置「审核中」，首页不展示门店认证待办；② 结算卡审核未通过——门店认证状态同样置「审核中」，首页不展示门店认证待办，只展示现有「您还未通过实名认证 去认证」待办；③ 补发报备后按现有逻辑流转：成功为「已完成」，失败展示「您还未通过门店认证」待办。</p>
-        <p style="margin:10px 0 0;font-size:12.5px;color:var(--sub)">说明：入网信息确认页反显商户姓名、结算卡号与结算卡照片并支持修改；门店认证页结算卡号为现有反显、不可修改；「待确认」在开放平台接口侧是正式返回码，见功能3；两个页面之后的下一步页面与原有逻辑相同，本次不改。</p>
+        <p style="margin:10px 0 0;font-size:12.5px;color:var(--sub)">手机按新增门店路径演示；选择门店路径在入网信息确认页通过后直接进设备绑定。</p>
       </div>
     </div>
   </div>
@@ -176,16 +173,12 @@
       <div class="card">
         <h3>功能2：合伙人 APP · 立刷进件门店认证</h3>
         <p class="path">页面路径：嘉联合伙人 APP → 首页 → 立刷进件 → 【立刷进件】→ 注册（上传身份证 → 上传结算卡）→ <b>门店认证</b> → 设备绑定 → 实名认证<br>原型<b>只从门店认证页起</b>，前面的进件步骤为现有流程、本次不改</p>
-        <p style="margin:0 0 10px;font-size:13px">判定条件、提示文案、是否报备与功能1<b>完全一致</b>（同一套服务端校验），差异只在展示形态。</p>
+        <p style="margin:0 0 10px;font-size:13px">与功能1 同一口径，差异只有：</p>
         <table>
           <tr><th>差异点</th><th>说明</th></tr>
-          <tr><td>门店认证页字段</td><td>APP 门店认证页<b>没有「结算信息」分组</b>，只有门店信息（入网地区／详细地址／行业类别／门店名称／联系方式）+ 三张经营照片；结算卡在前一步的「注册-上传结算卡」页录入</td></tr>
-          <tr><td>审核未通过</td><td>与审核中相同：不弹窗、不跳转，进入下一步；合伙人在进件记录看到现有待办「您还未通过实名认证 去认证→未通过结算卡认证」时，在<b>注册-上传结算卡</b>页代商户重传，无需商户本人登录公众号</td></tr>
           <tr><td>提示形态</td><td>APP 内弹窗／Toast，不跳公众号 H5</td></tr>
-          <tr><td>可复用的现有交互</td><td>多次识别未通过可提交人工审核，与 H5 一致；三要素失败 Toast 为「身份信息认证未通过，请核对姓名、身份证号、结算卡号」</td></tr>
+          <tr><td>代商户重传</td><td>合伙人可在入网信息确认页、或进件记录待办「您还未通过实名认证 去认证」进入「注册-上传结算卡」页，代商户重传结算卡</td></tr>
         </table>
-        <p style="margin:10px 0 0;font-size:12.5px;color:var(--red);font-weight:600">⚠️ 门店认证状态与待办同功能1：结算卡审核中／未通过时门店认证状态均置「审核中」，进件记录不展示门店认证待办；补发报备后按现有逻辑流转。</p>
-        <p style="margin:10px 0 0;font-size:12.5px;color:var(--sub)">说明：「注册－上传结算卡」页为现有页面，合伙人在此代商户上传结算卡照片，本次不改；提交后的下一步页面与原有逻辑相同，本次不改。</p>
       </div>
     </div>
   </div>
@@ -205,26 +198,13 @@
       <div class="card">
         <h3>功能3：开放平台 · 门店资料提交接口加拦截</h3>
         <p class="path">接口：<code>merch-shop-register</code> ｜ https://openapi.jlpay.com/access/charge/merch-shop-register</p>
-        <p style="margin:0 0 10px;font-size:13px"><b>现状问题</b>：该接口入参只有门店地区／MCC／名称／联系方式／三张照片，<b>没有任何结算卡状态前置条件</b>；实名认证接口 <code>merch-register</code> 的对接说明又明确「3 次自动校验不通过，流转到人工审核……<b>不影响后续入网流程</b>」。渠道商因此可在结算卡未通过时直接完成门店认证并发起报备，与公众号 H5 是同一个口子。</p>
-        <p style="margin:0 0 10px;font-size:13px"><b>本次改动</b>：接口入参<b>不变</b>，服务端在受理门店资料、发起报备前先校验该商户号对应左端子商户号的结算卡认证状态，未通过时返回业务失败码且不落报备；<b>非首次入网复用历史结算卡的，服务端同样要对复用的照片重新识别一次</b>，识别结果按原有结算卡认证逻辑处理，与商户端同一口径。</p>
+        <p style="margin:0 0 10px;font-size:13px">接口入参<b>不变</b>。非首次入网复用历史结算卡的，服务端同样重新识别照片，识别不通过按原有接口逻辑流转人工审核、按审核中处理。</p>
         <table>
-          <tr><th>结算卡状态</th><th>ret_code</th><th>ret_msg（建议）</th><th>渠道商应做什么</th></tr>
-          <tr><td><span class="st s3">已完成</span></td><td>00</td><td>处理成功</td><td>—</td></tr>
-          <tr><td><span class="st s1">审核中</span></td><td>00</td><td>处理成功</td><td>无需操作；不报备，审核通过后系统自动补发报备</td></tr>
-          <tr><td><span class="st s2">审核未通过</span></td><td>（待技术确定）</td><td>结算卡审核未通过，请重新提交结算卡信息</td><td>调用修改结算卡接口</td></tr>
-          <tr><td><span class="st s0">待确认结算卡</span></td><td>（待技术确定）</td><td>请先确认结算卡信息</td><td>非首次入网需先确认结算卡</td></tr>
-        </table>
-        <div class="warn">⚠️ <b>「待确认结算卡」只在接口端存在</b>：渠道商调用 <code>repeat-register</code> 完成非首次入网后，没有任何环节强制它先确认结算卡，可以直接调 <code>merch-shop-register</code>。商户端由「入网信息确认」前置挡住，因此不设这个分支。</div>
-        <div class="warn">⚠️ <code>repeat-register</code> 接口文档原文：使用该接口入网的商户<b>无法登录立刷电签版公众号</b>。被拦下后<b>唯一恢复路径是渠道商调用修改结算卡接口</b>，必须写进对接说明，否则渠道商会卡死。</div>
-        <p style="margin:12px 0 0;font-size:13px"><b>查询侧不改造</b>：步骤完成查询接口已返回结算卡认证状态与门店认证状态，只需在接口文档补充「门店资料提交的前置条件为结算卡审核通过」。</p>
-      </div>
-      <div class="card">
-        <h3>三个入口的一致性</h3>
-        <table>
-          <tr><th>入口</th><th>校验位置</th><th>拦住后怎么恢复</th></tr>
-          <tr><td>立刷公众号 H5 门店认证</td><td rowspan="3">统一在<b>服务端发起渠道报备前</b>，三端共用同一套判断</td><td>商户自助：首页待办 → 实名认证页重传结算卡</td></tr>
-          <tr><td>合伙人 APP 立刷进件</td><td>合伙人代传：注册-上传结算卡页重新上传</td></tr>
-          <tr><td>开放平台 merch-shop-register</td><td>渠道商调用修改结算卡接口</td></tr>
+          <tr><th>结算卡状态</th><th>接口返回</th><th>渠道商应做什么</th></tr>
+          <tr><td><span class="st s3">已完成</span></td><td>处理成功，受理并报备</td><td>—</td></tr>
+          <tr><td><span class="st s1">审核中</span></td><td>处理成功，受理但不报备</td><td>无需操作，审核通过后系统自动补发报备</td></tr>
+          <tr><td><span class="st s2">审核未通过</span></td><td>业务失败码（待技术确定）＋「结算卡审核未通过，请重新提交结算卡信息」</td><td>调用修改结算卡接口重新提交</td></tr>
+          <tr><td><span class="st s0">待确认结算卡</span></td><td>业务失败码（待技术确定）＋「请先确认结算卡信息」</td><td>先确认结算卡，再提交门店资料</td></tr>
         </table>
       </div>
     </div>
@@ -336,25 +316,6 @@ var H5 = {
         '<div class="btnbar"><button class="btn" onclick="submitShop(\'h5\')">提交</button></div>';
     }
   },
-  realname: {
-    title:'实名认证', sub:'epass.jlpay.com',
-    body:function(){
-      return '<div class="errbar">❗ 系统结算账号与照片不一致</div>' +
-        '<div class="grp"><h4>入网结算卡</h4>' +
-        '<div class="cardpic" onclick="reupload(\'h5\')">点击重新上传<br>结算卡卡号面</div>' +
-        '<div class="list">' +
-        '<div class="row"><b>开户名称</b><span class="v">*海</span></div>' +
-        '<div class="row"><b>结算卡</b><span>上传结算卡照片后自动识别</span></div>' +
-        '</div></div>' +
-        '<div class="grp"><h4>入网地址</h4>' +
-        '<div class="infobar">请确保入网地址与交易地址一致，避免影响正常交易</div>' +
-        '<div class="list">' +
-        '<div class="row"><b>入网地区</b><span class="v">广东省深圳市南山区</span></div>' +
-        '<div class="row"><b>详细地址</b><span class="v">粤海街道高新南四道17号</span></div>' +
-        '</div></div>' +
-        '<div class="btnbar"><button class="btn" onclick="reupload(\'h5\')">确认继续</button></div>';
-    }
-  },
   result: { title:'门店认证', sub:'epass.jlpay.com', body:nextScreen }
 };
 
@@ -364,26 +325,6 @@ var APP = {
     body:function(){
       return shopFields(false, '入网地区') +
         '<div class="btnbar"><button class="btn" onclick="submitShop(\'app\')">下一步</button></div>';
-    }
-  },
-  card: {
-    title:'注册',
-    body:function(){
-      return '<div class="errbar">❗ 系统结算账号与照片不一致</div>' +
-        '<div class="grp"><h4>上传结算卡</h4>' +
-        '<div class="cardpic" onclick="reupload(\'app\')">点击重新上传<br>结算卡卡号面</div>' +
-        '<div class="list">' +
-        '<div class="row"><b>结算卡</b><span class="v">6214 **** **** 5446</span></div>' +
-        '<div class="row"><b>结算卡开户行</b><span class="v">招商银行股份有限公司深圳总行大厦 ›</span></div>' +
-        '</div></div>' +
-        '<div class="grp"><h4>入网地址</h4>' +
-        '<div class="infobar">请确保入网地址与交易地址一致，避免影响正常交易</div>' +
-        '<div class="list">' +
-        '<div class="row"><b>入网地区</b><span class="v">广东省深圳市南山区</span></div>' +
-        '<div class="row"><b>详细地址</b><span class="v">粤海街道高新区社区万德莱大厦北座</span></div>' +
-        '</div></div>' +
-        '<div class="btnbar"><button class="btn" onclick="reupload(\'app\')">下一步</button>' +
-        '<div class="agree">✓ 我已阅读并同意《立刷电签版服务协议》和《隐私权政策》</div></div>';
     }
   },
   result: { title:'门店认证', body:nextScreen }
@@ -404,11 +345,11 @@ function render(app){
 
 function go(app, name){ S[app].stack.push(name); render(app); }
 function back(app){
-  if (S[app].stack.length <= 1) { toast(app, '已在起点页'); return; }
+  if (S[app].stack.length <= 1) return;
   S[app].stack.pop(); render(app);
 }
 function close_(app){
-  if (S[app].stack.length <= 1) { toast(app, '已在起点页'); return; }
+  if (S[app].stack.length <= 1) return;
   S[app].stack = [START[app]]; render(app);
 }
 function reset(app){
@@ -454,13 +395,6 @@ function alertDlg(app, txt, okTxt){
 function submitShop(app){
   S[app].shopSubmitted = true;
   S[app].autoReported = false; go(app, 'result');
-}
-
-/* 重传结算卡：状态变为审核中，回到门店认证页（审核结果用上方状态条模拟） */
-function reupload(app){
-  clearLayer(app);
-  S[app].bcs = '3'; renderStateBar(app);
-  back(app);
 }
 
 /* 入网信息确认页点【确认继续】：未通过停留本页，其余按入网路径走下一步 */
